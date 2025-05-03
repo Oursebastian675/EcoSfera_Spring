@@ -1,3 +1,14 @@
+# Archivos y carpetas innecesarios
+target/
+*.log
+*.class
+*.jar
+
+# Configuración de herramientas
+.idea/
+*.iml
+*.classpath
+
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar

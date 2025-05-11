@@ -2,6 +2,9 @@ package com.example.EcoSfera.modelos;
 
 import jakarta.persistence.*;
 
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "productos")
 public class Producto {
@@ -9,30 +12,15 @@ public class Producto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String nombre;
-
-    @Column(length = 500)
     private String descripcion;
+    private BigDecimal precio;
+    private int stock;
 
-    @Column(nullable = false)
-    private double precio;
+    @ManyToOne
+    @JoinColumn(name = "proveedor_id")
+    private Proveedor proveedor;
 
-    @Column(nullable = false)
-    private int cantidad;
-
-    // Constructores
-    public Producto() {
-    }
-
-    public Producto(String nombre, String descripcion, double precio, int cantidad) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.cantidad = cantidad;
-    }
-
-    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -57,19 +45,31 @@ public class Producto {
         this.descripcion = descripcion;
     }
 
-    public double getPrecio() {
+    public BigDecimal getPrecio() {
         return precio;
     }
 
-    public void setPrecio(double precio) {
+    public void setPrecio(BigDecimal precio) {
         this.precio = precio;
     }
 
-    public int getCantidad() {
-        return cantidad;
+    public int getStock() {
+        return stock;
     }
 
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public Proveedor getProveedor() {
+        return proveedor;
+    }
+
+    public void setProveedor(Proveedor proveedor) {
+        this.proveedor = proveedor;
     }
 }
+
+
+
+

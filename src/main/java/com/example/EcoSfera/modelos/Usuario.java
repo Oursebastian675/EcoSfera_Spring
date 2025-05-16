@@ -1,5 +1,6 @@
 package com.example.EcoSfera.modelos;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -11,10 +12,10 @@ public class Usuario {
 
     private String nombreUsuario;
     private String password;
-    private String email;
     private String rol; // Ejemplo: "ADMIN", "VENDEDOR"
 
     @OneToMany(mappedBy = "usuario")
+    @JsonManagedReference
     private List<Venta> ventas;
 
     public Long getId() {
@@ -39,14 +40,6 @@ public class Usuario {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getRol() {

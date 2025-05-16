@@ -10,7 +10,6 @@ public class Proveedor {
     private Long id;
 
     private String nombre;
-    private String contacto;
     private String telefono;
     private String email;
 
@@ -31,14 +30,6 @@ public class Proveedor {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
-    }
-
-    public String getContacto() {
-        return contacto;
-    }
-
-    public void setContacto(String contacto) {
-        this.contacto = contacto;
     }
 
     public String getTelefono() {

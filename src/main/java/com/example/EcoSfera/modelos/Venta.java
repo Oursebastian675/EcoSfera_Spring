@@ -1,5 +1,6 @@
 package com.example.EcoSfera.modelos;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,39 +18,13 @@ public class Venta {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
+    @JsonBackReference
     private Usuario usuario;
 
-    @ManyToMany
-    @JoinTable(
-            name = "detalle_venta",
-            joinColumns = @JoinColumn(name = "venta_id"),
-            inverseJoinColumns = @JoinColumn(name = "producto_id")
-    )
+    @JoinColumn(referencedColumnName = "productos")
+    @JsonBackReference
     private List<Producto> productos;
 
-    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DetalleVenta> detallesVenta;
-
-    public Venta() {
-        this.fechaVenta = LocalDateTime.now();
-        this.detallesVenta = new ArrayList<>();
-    }
-
-    public void agregarDetalleVenta(Producto producto, int cantidad, BigDecimal precioUnitario) {
-        DetalleVenta detalle = new DetalleVenta();
-        detalle.setVenta(this);
-        detalle.setProducto(producto);
-        detalle.setCantidad(cantidad);
-        detalle.setPrecioUnitario(precioUnitario);
-        this.detallesVenta.add(detalle);
-        this.totalVenta = calcularTotal();
-    }
-
-    private BigDecimal calcularTotal() {
-        return detallesVenta.stream()
-                .map(detalle -> detalle.getPrecioUnitario().multiply(new BigDecimal(detalle.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
 
     public Long getId() {
         return id;
@@ -91,11 +66,4 @@ public class Venta {
         this.productos = productos;
     }
 
-    public List<DetalleVenta> getDetallesVenta() {
-        return detallesVenta;
-    }
-
-    public void setDetallesVenta(List<DetalleVenta> detallesVenta) {
-        this.detallesVenta = detallesVenta;
-    }
 }

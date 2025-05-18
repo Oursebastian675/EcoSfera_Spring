@@ -1,0 +1,39 @@
+Post-Proveedor:
+{
+    "nombre": "Antonio De La Cruz",
+    "direccion": "Cra63",
+    "telefono": "300-300-3002"
+}
+
+Post-productos:
+{
+    "nombre": "nuevo producto",
+    "descripcion": "descripcion",
+    "precio": 2.000,
+    "stock": 3,
+    "proveedor": {
+        "id": 1
+
+    }
+}
+
+Post-Usuarios:
+{
+    "nombre": "Juan Perez",
+    "email": "juan.perez@example.com"
+}
+
+Post-Ventas:
+{
+  "usuarioId": 1,
+  "items": [
+    {
+      "productoId": 2,
+      "cantidad": 2
+    },
+    {
+      "productoId": 1,
+      "cantidad": 1
+    }
+  ]
+}

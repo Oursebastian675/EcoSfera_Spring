@@ -18,7 +18,6 @@ public class Venta {
 
     private Double totalVenta;
 
-    // Getters y setters
     public Long getId() {
         return id;
     }

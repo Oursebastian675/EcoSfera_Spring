@@ -15,14 +15,14 @@ public class VentaService {
     @Autowired
     private VentaRepository ventaRepository;
     @Autowired
-    private UsuarioService usuarioService; // Asegúrate de tener este servicio
+    private UsuarioService usuarioService;
     @Autowired
-    private ProductoService productoService; // Asegúrate de tener este servicio
+    private ProductoService productoService;
 
     @Transactional
     public Venta crearVenta(NuevaVentaRequest ventaRequest) {
         Long usuarioId = ventaRequest.getUsuarioId();
-        Usuario usuario = usuarioService.getUsuarioById(usuarioId).orElse(null); // Asumo que tienes un método así
+        Usuario usuario = usuarioService.getUsuarioById(usuarioId).orElse(null);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuario no encontrado con ID: " + usuarioId);
         }

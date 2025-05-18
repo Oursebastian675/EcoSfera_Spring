@@ -10,7 +10,6 @@ public class NuevaVentaRequest {
         private Long productoId;
         private Integer cantidad;
 
-        // Getters and setters for ItemVenta
         public Long getProductoId() {
             return productoId;
         }
@@ -28,7 +27,6 @@ public class NuevaVentaRequest {
         }
     }
 
-    // Getters and setters for NuevaVentaRequest
     public Long getUsuarioId() {
         return usuarioId;
     }

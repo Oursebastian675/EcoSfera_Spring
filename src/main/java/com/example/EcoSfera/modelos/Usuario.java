@@ -1,4 +1,5 @@
 package com.example.EcoSfera.modelos;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -14,10 +15,19 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nombre;
-    private String email;
+    private String apellido;
+    private String email; // Este sería tu campo "correo"
+    private String telefono;
+    private String edad;
+    private String usuario;
+    private String contrasena;
 
     @OneToMany(mappedBy = "usuario")
     @JsonManagedReference
     private List<Venta> ventas;
+
+    // Lombok @Data genera getters, setters, toString, equals, hashCode.
+    // Si no usas Lombok, deberás crearlos manualmente.
 }

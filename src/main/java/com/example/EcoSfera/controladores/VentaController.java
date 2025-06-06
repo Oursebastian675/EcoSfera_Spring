@@ -6,10 +6,9 @@ import com.example.EcoSfera.servicios.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*; // Covers GetMapping, PostMapping, DeleteMapping, PathVariable, etc.
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List; // Para devolver una lista de ventas
-
+import java.util.List;
 @RestController
 @RequestMapping("/api/ventas")
 public class VentaController {
@@ -18,7 +17,7 @@ public class VentaController {
     private VentaService ventaService;
 
     @PostMapping
-    public ResponseEntity<?> crearVenta(@RequestBody NuevaVentaRequest ventaRequest) { // Cambiado Object a ResponseEntity<?>
+    public ResponseEntity<?> crearVenta(@RequestBody NuevaVentaRequest ventaRequest) {
         try {
             Venta nuevaVenta = ventaService.crearVenta(ventaRequest);
             return new ResponseEntity<>(nuevaVenta, HttpStatus.CREATED);
@@ -30,7 +29,6 @@ public class VentaController {
         }
     }
 
-    // --- MÉTODOS GET ---
 
     @GetMapping
     public ResponseEntity<List<Venta>> obtenerTodasLasVentas() {
@@ -50,20 +48,17 @@ public class VentaController {
         return new ResponseEntity<>(venta, HttpStatus.OK);
     }
 
-    // --- NUEVO MÉTODO DELETE ---
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarVenta(@PathVariable Long id) {
         try {
             boolean eliminada = ventaService.eliminarVenta(id);
             if (eliminada) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT); // HTTP 204: Éxito, sin contenido que devolver
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND); // HTTP 404: Venta no encontrada
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            // Es una buena práctica registrar el error en el servidor
-            // log.error("Error al intentar eliminar la venta con ID: {}", id, e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR); // HTTP 500: Error interno del servidor
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

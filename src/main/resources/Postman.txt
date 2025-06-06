@@ -17,12 +17,6 @@ Post-productos:
     }
 }
 
-Post-Usuarios:
-{
-    "nombre": "Juan Perez",
-    "email": "juan.perez@example.com"
-}
-
 Post-Ventas:
 {
   "usuarioId": 1,

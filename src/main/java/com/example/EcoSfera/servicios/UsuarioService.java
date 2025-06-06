@@ -1,13 +1,11 @@
 package com.example.EcoSfera.servicios;
 
-import com.example.EcoSfera.config.UsuarioUpdateDTO; // Importa el nuevo DTO
+import com.example.EcoSfera.config.UsuarioUpdateDTO;
 import com.example.EcoSfera.modelos.Usuario;
 import com.example.EcoSfera.repositorios.UsuarioRepository;
-// import com.example.EcoSfera.repositorios.VentaRepository; // Import if you add logic to check for sales
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.dao.DataIntegrityViolationException; // Import if you throw this from service
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +21,6 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // Assuming VentaRepository would be needed if you check for sales before deletion
-    // @Autowired
-    // private VentaRepository ventaRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -38,30 +33,14 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-    // This method saveUsuario might be redundant if crearUsuario and actualizarUsuario cover all cases.
-    // Consider reviewing its necessity.
     public Usuario saveUsuario(Usuario usuario) {
-        // For example, if this is only for internal use and doesn't need password encoding or validation,
-        // it might be okay. Otherwise, it could bypass logic in crearUsuario.
         return usuarioRepository.save(usuario);
     }
 
-    /**
-     * Elimina un usuario por su ID.
-     *
-     * @param id El ID del usuario a eliminar.
-     * @return true si el usuario fue encontrado y eliminado, false si el usuario no fue encontrado.
-     * @throws org.springframework.dao.DataIntegrityViolationException si el usuario no puede ser eliminado debido a restricciones de integridad (ej. ventas asociadas).
-     */
+
     @Transactional
     public boolean deleteUsuario(Long id) {
         if (usuarioRepository.existsById(id)) {
-            // Optional: Add business logic here if a user cannot be deleted under certain conditions
-            // e.g., check for associated sales if they shouldn't be orphaned or if cascading delete is not set up.
-            // List<Venta> compras = ventaRepository.findByUsuarioId(id); // Assuming such a method exists
-            // if (!compras.isEmpty()) {
-            //     throw new DataIntegrityViolationException("El usuario con ID " + id + " tiene compras asociadas y no puede ser eliminado.");
-            // }
             usuarioRepository.deleteById(id);
             logger.info("Usuario con ID {} eliminado exitosamente.", id);
             return true;

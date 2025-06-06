@@ -18,7 +18,7 @@ public class Usuario {
 
     private String nombre;
     private String apellido;
-    private String email; // Este sería tu campo "correo"
+    private String email;
     private String telefono;
     private String edad;
     private String usuario;
@@ -28,6 +28,4 @@ public class Usuario {
     @JsonManagedReference
     private List<Venta> compras;
 
-    // Lombok @Data genera getters, setters, toString, equals, hashCode.
-    // Si no usas Lombok, deberás crearlos manualmente.
 }

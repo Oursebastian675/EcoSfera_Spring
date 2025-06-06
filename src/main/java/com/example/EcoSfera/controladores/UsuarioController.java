@@ -6,7 +6,7 @@ import com.example.EcoSfera.servicios.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException; // Import for specific exception handling
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -88,7 +88,6 @@ public class UsuarioController {
         }
     }
 
-    // --- NUEVO ENDPOINT DELETE PARA BORRAR USUARIO ---
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
         try {
@@ -96,7 +95,7 @@ public class UsuarioController {
             if (eliminado) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT); // HTTP 204: Success, no content to return
             } else {
-                // This case (user not found by service) should be handled by the service returning false
+
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("message", "Usuario no encontrado con ID: " + id));
             }

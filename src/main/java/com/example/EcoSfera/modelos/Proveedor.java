@@ -1,6 +1,6 @@
 package com.example.EcoSfera.modelos;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference; // Importa esta anotación
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,8 +19,8 @@ public class Proveedor {
     private String direccion;
     private String telefono;
 
-    @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL, fetch = FetchType.LAZY) // fetch = FetchType.LAZY es buena práctica
-    @JsonManagedReference // <-- AÑADE ESTO
+    @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Producto> productos;
 }
     

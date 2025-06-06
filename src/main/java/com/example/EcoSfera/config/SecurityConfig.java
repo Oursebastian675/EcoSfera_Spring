@@ -10,8 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-
 @Configuration
 @EnableWebSecurity // Habilita la configuración de seguridad web de Spring
 public class SecurityConfig {
@@ -24,23 +22,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitar CSRF porque probablemente estás construyendo una API stateless
-                // y no usando formularios HTML tradicionales para la autenticación.
-                // Si usas tokens (como JWT), CSRF no es tan relevante.
+                // Deshabilitar CSRF. Para APIs stateless es común deshabilitarlo.
                 .csrf(csrf -> csrf.disable())
-                // Configurar CORS a través del filtro de Spring Security
+
+                // Configurar CORS a través del DSL de HttpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
+                // Configurar las reglas de autorización para las peticiones HTTP
                 .authorizeHttpRequests(authz -> authz
-                        // Permitir acceso sin autenticación a los endpoints de registro y login
-                        .requestMatchers("/api/usuarios", "/api/usuarios/login").permitAll()
+                        // Permitir acceso sin autenticación a los endpoints de usuarios y proveedores
+                        .requestMatchers("/api/usuarios/**", "/api/usuarios/login").permitAll()
+                        .requestMatchers("/api/proveedores/**").permitAll()
+                        .requestMatchers("/api/productos/**").permitAll()
+                        .requestMatchers("/api/ventas/**").permitAll()
                         // Cualquier otra solicitud debe estar autenticada
                         .anyRequest().authenticated()
                 )
-                // ...
 
-                // Configurar la gestión de sesiones para que sea stateless si usas tokens
-                // Si no usas tokens y dependes de sesiones, puedes omitir esto o ajustarlo.
+                // Configurar la gestión de sesiones para que sea STATELESS,
+                // lo cual es común para APIs REST que usan tokens (como JWT).
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
@@ -56,8 +56,9 @@ public class SecurityConfig {
         // configuration.setAllowCredentials(true); // Descomenta si necesitas enviar cookies/credenciales
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration); // Aplicar esta configuración a /api/**
+        // Aplicar esta configuración a todos los paths bajo /api/
+        // Es importante que este path cubra todos tus endpoints de API
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 }
-    

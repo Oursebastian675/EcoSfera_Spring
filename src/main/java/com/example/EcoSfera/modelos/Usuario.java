@@ -26,7 +26,7 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario")
     @JsonManagedReference
-    private List<Venta> ventas;
+    private List<Venta> compras;
 
     // Lombok @Data genera getters, setters, toString, equals, hashCode.
     // Si no usas Lombok, deberás crearlos manualmente.

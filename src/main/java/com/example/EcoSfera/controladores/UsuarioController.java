@@ -1,15 +1,16 @@
 package com.example.EcoSfera.controladores;
 
+import com.example.EcoSfera.config.UsuarioUpdateDTO;
 import com.example.EcoSfera.modelos.Usuario;
 import com.example.EcoSfera.servicios.UsuarioService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataIntegrityViolationException; // Import for specific exception handling
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.example.EcoSfera.config.LoginRequestDTO; // Asegúrate de importar el DTO
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import com.example.EcoSfera.config.LoginRequestDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -19,44 +20,37 @@ import java.util.Optional;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
+    private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class);
 
     @Autowired
     private UsuarioService usuarioService;
 
-    // --- Endpoint para REGISTRO de usuarios ---
-    // Este endpoint ya lo tenías y sirve para crear (registrar) un nuevo usuario.
-    // C:/Users/USUARIO/Documents/Sebastian/Trabajos/EcoSfera_Spring/src/main/java/com/example/EcoSfera/controladores/UsuarioController.java
-// ...
-    @PostMapping // Mapea a POST /api/usuarios
-    public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) { // Cambiado a ResponseEntity<?> para mejor manejo de errores
+    @PostMapping
+    public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
         try {
-            // Aquí podrías añadir validaciones a nivel de controlador si prefieres,
-            // usando @Valid y anotaciones de Bean Validation en tu entidad Usuario.
             Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
-            // Es buena práctica no devolver la contraseña en la respuesta
-            nuevoUsuario.setContrasena(null);
+            nuevoUsuario.setContrasena(null); // Do not return password
             return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED);
-        } catch (RuntimeException e) { // Captura "El email ya está registrado." u otras de validación del servicio
-            // Devuelve el mensaje de la excepción como cuerpo de la respuesta 400
+        } catch (IllegalArgumentException e) { // Catch specific exception from service
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+        catch (RuntimeException e) { // Catch other runtime exceptions from service (e.g., email/username exists)
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
-// ...
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUsuario(@RequestBody LoginRequestDTO loginRequest) {
         Optional<Usuario> usuarioAutenticado = usuarioService.autenticarUsuario(
-                loginRequest.getCredencial(), // Esto ya es genérico
+                loginRequest.getCredencial(),
                 loginRequest.getContrasena()
         );
 
         if (usuarioAutenticado.isPresent()) {
             Usuario user = usuarioAutenticado.get();
-            user.setContrasena(null);
+            user.setContrasena(null); // Do not return password
             return ResponseEntity.ok(user);
         } else {
-            // Para mejorar la seguridad, no reveles si el usuario o la contraseña fueron incorrectos.
-            // Un mensaje genérico es mejor.
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credenciales inválidas"));
         }
     }
@@ -64,8 +58,7 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<List<Usuario>> getAllUsuarios() {
         List<Usuario> usuarios = usuarioService.getAllUsuarios();
-        // Es buena práctica no exponer las contraseñas, incluso hasheadas, en listados generales
-        usuarios.forEach(u -> u.setContrasena(null));
+        usuarios.forEach(u -> u.setContrasena(null)); // Do not return passwords
         return new ResponseEntity<>(usuarios, HttpStatus.OK);
     }
 
@@ -73,11 +66,51 @@ public class UsuarioController {
     public ResponseEntity<Usuario> getUsuarioById(@PathVariable Long id) {
         Optional<Usuario> usuario = usuarioService.getUsuarioById(id);
         return usuario.map(u -> {
-                    u.setContrasena(null); // No exponer contraseña
+                    u.setContrasena(null); // Do not return password
                     return new ResponseEntity<>(u, HttpStatus.OK);
                 })
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarUsuario(@PathVariable Long id, @RequestBody UsuarioUpdateDTO usuarioUpdateDTO) {
+        try {
+            Optional<Usuario> usuarioActualizadoOptional = usuarioService.actualizarUsuario(id, usuarioUpdateDTO);
 
+            return usuarioActualizadoOptional.map(usuario -> {
+                usuario.setContrasena(null); // Never return the password in the response
+                return ResponseEntity.ok(usuario);
+            }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body((Usuario) Map.of("message", "Usuario no encontrado con ID: " + id))); // Changed to Map for consistency
+
+        } catch (RuntimeException e) { // Catches validation exceptions from the service (duplicate email/username, etc.)
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
+
+    // --- NUEVO ENDPOINT DELETE PARA BORRAR USUARIO ---
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
+        try {
+            boolean eliminado = usuarioService.deleteUsuario(id);
+            if (eliminado) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT); // HTTP 204: Success, no content to return
+            } else {
+                // This case (user not found by service) should be handled by the service returning false
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "Usuario no encontrado con ID: " + id));
+            }
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Error de integridad al intentar eliminar usuario con ID {}: {}", id, e.getMessage());
+            // This typically means the user is referenced by other entities (e.g., Venta)
+            // and cannot be deleted due to foreign key constraints.
+            return ResponseEntity.status(HttpStatus.CONFLICT) // HTTP 409: Conflict
+                    .body(Map.of("message", "No se puede eliminar el usuario. Puede tener datos asociados (ej. compras) que impiden su eliminación. ID: " + id));
+        } catch (Exception e) {
+            // Catch any other unexpected errors
+            logger.error("Error inesperado al eliminar usuario con ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Ocurrió un error interno al intentar eliminar el usuario."));
+        }
+    }
+}

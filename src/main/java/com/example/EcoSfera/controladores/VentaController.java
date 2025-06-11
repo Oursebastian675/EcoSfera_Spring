@@ -1,18 +1,21 @@
 package com.example.EcoSfera.controladores;
 
-import com.example.EcoSfera.config.NuevaVentaRequestDTO; // Importar el DTO correcto
+import com.example.EcoSfera.config.NuevaVentaRequestDTO;
 import com.example.EcoSfera.modelos.Venta;
+import com.example.EcoSfera.servicios.FacturaGenerationService; // Importar el servicio de facturas
 import com.example.EcoSfera.servicios.VentaService;
+// import com.example.EcoSfera.servicios.EmailService; // Si quieres enviar email también
+// import org.springframework.core.io.ByteArrayResource; // Para EmailService
+// import org.springframework.mock.web.MockMultipartFile; // Para EmailService
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication; // Importar para obtener usuario autenticado
-import org.springframework.security.core.userdetails.UserDetails; // Para obtener detalles del usuario
-// import com.example.EcoSfera.servicios.UsuarioService; // Si necesitas buscar usuario por email/username
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-// import jakarta.validation.Valid; // Si decides usar validaciones en el DTO
+
 
 import java.util.List;
 import java.util.Map;
@@ -26,59 +29,81 @@ public class VentaController {
     @Autowired
     private VentaService ventaService;
 
-    // @Autowired // Descomentar si lo usas para obtener el ID del usuario
-    // private UsuarioService usuarioService;
+    @Autowired
+    private FacturaGenerationService facturaGenerationService; // Inyectar servicio de facturas
 
+    // @Autowired
+    // private EmailService emailService; // Descomentar si vas a enviar email
 
     @PostMapping
-    // Considera añadir @Valid si usas anotaciones de validación en NuevaVentaRequestDTO
     public ResponseEntity<?> crearVenta(@RequestBody NuevaVentaRequestDTO ventaRequestDTO, Authentication authentication) {
         try {
-            // **Recomendación de Seguridad y Buenas Prácticas:**
-            // Es mejor obtener el ID del usuario desde el objeto `Authentication`
-            // en lugar de confiar en el `userId` enviado en el cuerpo de la solicitud.
-            if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-                // Aquí necesitarías una forma de obtener el ID del Usuario a partir de su username (email)
-                // Por ejemplo, si tu UserDetails implementa una interfaz con getId() o si buscas en UsuarioService
-                // String username = userDetails.getUsername();
-                // Usuario usuarioAutenticado = usuarioService.findByUsernameOrEmail(username); // Necesitarías este método
-                // if (usuarioAutenticado != null) {
-                //     ventaRequestDTO.setUserId(usuarioAutenticado.getId());
-                // } else {
-                //     log.warn("Usuario autenticado no encontrado en la base de datos: {}", username);
-                //     return new ResponseEntity<>(Map.of("message", "Error de autenticación: Usuario no encontrado."), HttpStatus.UNAUTHORIZED);
-                // }
-                log.info("Procesando venta para el usuario autenticado: {}", authentication.getName());
-                // Si decides seguir usando el userId del DTO por ahora, asegúrate que el frontend lo envíe correctamente.
-                // Si el userId del DTO es null y la autenticación está presente, podrías lanzar un error o intentar obtenerlo.
-                if (ventaRequestDTO.getUserId() == null) {
-                    // Aquí decides cómo manejarlo: o bien es un error si esperas que el DTO lo traiga,
-                    // o intentas obtenerlo del 'authentication' como se comentó arriba.
-                    // Por ahora, si se usa el userId del DTO, este debe venir.
-                    log.warn("userId es nulo en la solicitud de venta y no se está obteniendo de la autenticación.");
-                }
+            if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+                log.warn("Intento de crear venta sin autenticación válida.");
+                return new ResponseEntity<>(Map.of("message", "Se requiere autenticación para crear una venta."), HttpStatus.UNAUTHORIZED);
+            }
+            // UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            // String username = userDetails.getUsername(); // Este es el email o username del token
+            // Aquí podrías validar que el ventaRequestDTO.getUserId() (si lo sigues usando)
+            // coincida con el usuario autenticado, o mejor aún, ignorar el userId del DTO
+            // y usar siempre el del usuario autenticado. Por ahora, asumimos que VentaService lo maneja
+            // o que el frontend envía el userId correcto (aunque obtenerlo del token es más seguro).
 
-            } else if (ventaRequestDTO.getUserId() == null) {
-                // Si no hay autenticación y el userId no viene en el DTO, es un error.
-                log.warn("Intento de crear venta sin userId y sin autenticación.");
-                return new ResponseEntity<>(Map.of("message", "Se requiere userId o estar autenticado."), HttpStatus.BAD_REQUEST);
+            log.info("Procesando venta para el usuario autenticado: {}", authentication.getName());
+            if (ventaRequestDTO.getUserId() == null) {
+                // Si decides que el userId debe venir del token, y no del DTO, aquí lo establecerías.
+                // Por ahora, si VentaService lo requiere, el DTO debe traerlo o VentaService debe obtenerlo.
+                log.warn("userId es nulo en la solicitud de venta. Asegúrate de que VentaService pueda obtenerlo si es necesario.");
             }
 
-
             Venta nuevaVenta = ventaService.crearVenta(ventaRequestDTO);
+
+            // --- INICIO INTEGRACIÓN FACTURACIÓN ---
+            try {
+                String emailUsuarioParaFactura = nuevaVenta.getUsuario().getEmail();
+                String nombreArchivoFactura = "factura_ecosfera_" + nuevaVenta.getId() + ".pdf";
+
+                // Generar el PDF de la factura
+                byte[] pdfBytes = facturaGenerationService.generarFacturaPdf(nuevaVenta, ventaRequestDTO, nombreArchivoFactura);
+                log.info("Factura generada en memoria ({} bytes) para la venta ID: {}", pdfBytes.length, nuevaVenta.getId());
+
+                // Opcional: Enviar la factura por correo
+                /*
+                if (pdfBytes != null && pdfBytes.length > 0 && emailUsuarioParaFactura != null) {
+                    MockMultipartFile multipartPdfFile = new MockMultipartFile(
+                        nombreArchivoFactura, // nombre original del archivo
+                        nombreArchivoFactura, // nombre del archivo
+                        "application/pdf",    // content type
+                        pdfBytes
+                    );
+                    String asuntoCorreo = "Tu factura de EcoSfera - Compra #" + nuevaVenta.getId();
+                    String cuerpoCorreo = "<p>Hola " + nuevaVenta.getNombreCliente() + ",</p>" +
+                                          "<p>Gracias por tu compra en EcoSfera. Adjuntamos la factura correspondiente (Nº " + nuevaVenta.getId() + ").</p>" +
+                                          "<p>Saludos,<br/>El equipo de EcoSfera</p>";
+                    emailService.enviarFacturaPorCorreo(emailUsuarioParaFactura, asuntoCorreo, cuerpoCorreo, multipartPdfFile, nombreArchivoFactura);
+                    log.info("Factura para venta ID {} enviada por correo a {}", nuevaVenta.getId(), emailUsuarioParaFactura);
+                }
+                */
+
+            } catch (Exception e) {
+                log.error("Error durante la generación o envío de la factura para la venta ID {}: {}", nuevaVenta.getId(), e.getMessage(), e);
+                // Importante: La venta ya se creó. Este error es solo de la facturación/email.
+                // No se devuelve un error al cliente por esto, pero se registra.
+                // Podrías añadir la factura a una cola de reintentos si el envío falla.
+            }
+            // --- FIN INTEGRACIÓN FACTURACIÓN ---
+
             return new ResponseEntity<>(nuevaVenta, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             log.warn("Intento de crear venta con datos inválidos: {}", e.getMessage());
             return new ResponseEntity<>(Map.of("message", e.getMessage()), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            log.error("Error inesperado al crear venta: ", e); // Incluir la traza de la excepción en el log
+            log.error("Error inesperado al crear venta: ", e);
             return new ResponseEntity<>(Map.of("message", "Ocurrió un error procesando la venta."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // ... resto de los métodos del controlador (obtenerTodasLasVentas, obtenerVentaPorId, eliminarVenta) ...
-    // Estos no necesitan cambios directos por la refactorización del DTO de creación.
+    // ... (resto de los métodos GET, DELETE sin cambios)
     @GetMapping
     public ResponseEntity<List<Venta>> obtenerTodasLasVentas() {
         List<Venta> ventas = ventaService.obtenerTodasLasVentas();

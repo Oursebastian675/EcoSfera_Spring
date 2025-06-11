@@ -1,33 +1,127 @@
-Post-Proveedor:
-{
-    "nombre": "Antonio De La Cruz",
-    "direccion": "Cra63",
-    "telefono": "300-300-3002"
-}
+http://localhost:8080
 
-Post-productos:
-{
-    "nombre": "nuevo producto",
-    "descripcion": "descripcion",
-    "precio": 2.000,
-    "stock": 3,
-    "proveedor": {
-        "id": 1
+Usuarios
+Post:
+        {
+            "nombre": "NombreUsuario",
+            "apellido": "ApellidoUsuario",
+            "email": "usuario@example.com",
+            "telefono": "123456789",
+            "edad": "30",
+            "usuario": "nombredeusuario",
+            "contrasena": "contraseñaSegura123"
+        }
 
-    }
-}
 
-Post-Ventas:
-{
-  "usuarioId": 1,
-  "items": [
-    {
-      "productoId": 2,
-      "cantidad": 2
-    },
-    {
-      "productoId": 1,
-      "cantidad": 1
-    }
-  ]
-}
+http://localhost:8080/api/usuarios/login
+Inicio de sesion (post):
+        {
+            "credencial": "usuario@example.com", // o "nombredeusuario"
+            "contrasena": "contraseñaSegura123"
+        }
+                {
+                    "token": "eyJhbGciOiJIUzUxMiJ9...",
+                    "userId": 1,
+                    "email": "usuario@example.com",
+                    "nombre": "NombreUsuario"
+                }
+
+http://localhost:8080/api/usuarios
+Metodo get(obtener todos los usuarios): Authorization: Bearer Token
+
+Metodo put(editar):
+        {
+            "nombre": "NombreActualizado",
+            "telefono": "987654321",
+            "contrasena": "nuevaContraseñaSegura456" // Opcional, solo si se quiere cambiar
+        }
+
+http://localhost:8080/api/usuarios/{id} (se reemplaza el id por el que corresponda)
+Metodo delete(borrar):Authorization: Bearer Token
+
+Ventas
+
+http://localhost:8080/api/ventas
+Metodo post: Authorization: Bearer Token
+        {
+            "userId": 1, // ID del usuario que realiza la compra
+            "informacionEnvio": {
+                "nombre": "Nombre Cliente",
+                "apellido": "Apellido Cliente",
+                "direccion": "Calle Falsa 123, Ciudad",
+                "telefono": "555-0101",
+                "tipoDocumento": "DNI",
+                "numeroDocumento": "12345678X"
+            },
+            "items": [
+                {
+                    "productoId": 1, // ID del producto
+                    "cantidad": 2
+                },
+                {
+                    "productoId": 3,
+                    "cantidad": 1
+                }
+            ],
+            "metodoPago": "Tarjeta de Crédito"
+        }
+
+http://localhost:8080/api/ventas-/{id}
+Metodo get y delete:Authorization: Bearer Token
+
+Productos
+
+http://localhost:8080/api/productos-/{id}
+Metodo get-delete:Authorization: Bearer Token
+
+http://localhost:8080/api/productos
+Metodo post:
+        {
+            "nombre": "Producto Nuevo",
+            "descripcion": "Descripción detallada del producto nuevo.",
+            "precio": 19.99,
+            "stock": 100,
+            "proveedor": { // Opcional: puedes enviar solo el ID si tu lógica lo maneja, o el objeto completo
+                "id": 1 // ID de un proveedor existente
+            }
+        }
+
+http://localhost:8080/api/productos/{id}
+Metodo put:
+        {
+            "nombre": "Producto Actualizado",
+            "descripcion": "Descripción actualizada.",
+            "precio": 21.50,
+            "stock": 90,
+            "proveedor": {
+                "id": 2
+            }
+        }
+
+Proveedores
+
+http://localhost:8080/api/proveedores-/{id}
+Metodo get-delete
+
+
+http://localhost:8080/api/proveedores
+Metodo post:
+        {
+            "nombre": "Proveedor Genial S.L.",
+            "direccion": "Avenida de la Innovación 42",
+            "telefono": "555-9876"
+        }
+
+http://localhost:8080/api/proveedores/{id}
+Metodo put:
+        {
+            "nombre": "Proveedor Genial Actualizado S.L.",
+            "direccion": "Avenida de la Innovación 42, Oficina 101",
+            "telefono": "555-9877"
+        }
+
+
+Facturas
+http://localhost:8080/api/enviar-factura
+
+EN PROCESO
